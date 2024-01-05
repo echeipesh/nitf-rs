@@ -1,6 +1,6 @@
 //! Reserved Extension segment subheader definition
 use std::fmt::Display;
-use std::fs::File;
+use std::io::{Read, Seek};
 
 use crate::headers::NitfSegmentHeader;
 use crate::types::{ExtendedSubheader, NitfField, Security};
@@ -34,7 +34,7 @@ impl Display for ReservedExtensionHeader {
     }
 }
 impl NitfSegmentHeader for ReservedExtensionHeader {
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.re.read(reader, 2u8, "RE")?;
         self.resid.read(reader, 25u8, "RESID")?;
         self.resver.read(reader, 2u8, "RESVER")?;

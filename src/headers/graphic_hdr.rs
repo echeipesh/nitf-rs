@@ -1,6 +1,6 @@
 //! Graphic segment subheader definition
 use std::fmt::Display;
-use std::fs::File;
+use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use crate::headers::NitfSegmentHeader;
@@ -69,7 +69,7 @@ impl Display for GraphicHeader {
     }
 }
 impl NitfSegmentHeader for GraphicHeader {
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.sy.read(reader, 2u8, "SY")?;
         self.sid.read(reader, 10u8, "SID")?;
         self.sname.read(reader, 20u8, "SNAME")?;

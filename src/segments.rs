@@ -1,9 +1,7 @@
 //! File header and generic segment definition
-use memmap2::{Mmap, MmapOptions};
 use std::fmt::Display;
-use std::fs::File;
+use std::io::Read;
 use std::io::{Seek, SeekFrom::Start};
-use std::ops::Deref;
 
 use crate::headers::{NitfHeader, NitfSegmentHeader};
 use crate::NitfResult;
@@ -16,7 +14,7 @@ pub struct FileHeader {
     pub header_size: u64,
 }
 impl FileHeader {
-    pub fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    pub fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.meta.read(reader)?;
         // Crash if cursor error
         self.header_size = reader.stream_position()?;
@@ -34,7 +32,7 @@ pub struct NitfSegment<T: NitfSegmentHeader> {
     /// Header fields defined in module
     pub meta: T,
     /// Segment data
-    pub data: Mmap,
+    pub data: Vec<u8>,
     /// Byte offset of header start
     pub header_offset: u64,
     /// Byte size of header
@@ -45,20 +43,24 @@ pub struct NitfSegment<T: NitfSegmentHeader> {
     pub data_size: u64,
 }
 impl<T: NitfSegmentHeader> NitfSegment<T> {
-    pub fn initialize(reader: &mut File, header_size: u32, data_size: u64) -> NitfResult<Self> {
+    pub fn initialize<F: Read + Seek>(reader: &mut F, header_size: u32, data_size: u64) -> NitfResult<Self> {
         // Crash if cursor error
         let header_offset = reader.stream_position()?;
         let header_size = header_size;
         let data_size = data_size;
         let data_offset = header_offset + header_size as u64;
         let meta = T::from_reader(reader)?;
-        let mut memmap_opts = MmapOptions::new();
-        let data = unsafe {
-            memmap_opts
-                .offset(data_offset)
-                .len(data_size as usize)
-                .map(reader.deref())?
-        };
+        let mut data= vec![0; data_size as usize];
+        reader.seek(Start(data_offset))?;
+        reader.read_exact(&mut data)?;
+        //// TODO: Allow for implementation with Mmap - we can return some kind of indexable trait
+        // let mut memmap_opts = MmapOptions::new();
+        // let data = unsafe {
+        //     memmap_opts
+        //         .offset(data_offset)
+        //         .len(data_size as usize)
+        //         .map(reader.deref())?
+        // };
         // Seek to end of data for next segment to be read
         // Crash if cursor error
         reader.seek(Start(data_offset + data_size))?;

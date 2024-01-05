@@ -1,7 +1,6 @@
 //! Common types use throughout
 use log::{trace, warn};
 use std::fmt::{Debug, Display};
-use std::fs::File;
 use std::io::{Read, Seek};
 use std::str::FromStr;
 
@@ -151,9 +150,9 @@ where
     <V as FromStr>::Err: Debug,
 {
     /// Read the specified number of bytes and parse the value of a given field
-    pub fn read<T: Sized + Into<u64>>(
+    pub fn read<T: Sized + Into<u64>, R: Read + Seek>(
         &mut self,
-        reader: &mut File,
+        reader: &mut R,
         n_bytes: T,
         field_name: &str,
     ) -> NitfResult<()> {
@@ -198,7 +197,7 @@ impl<V: FromStr + Debug> Display for NitfField<V> {
     }
 }
 impl Security {
-    pub fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    pub fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.clas.read(reader, 1u8, "CLAS")?;
         self.clsy.read(reader, 2u8, "CLSY")?;
         self.code.read(reader, 11u8, "CODE")?;
@@ -349,7 +348,7 @@ pub struct ExtendedSubheader {
     pub size: usize,
 }
 impl ExtendedSubheader {
-    pub fn read(&mut self, reader: &mut File, n_bytes: usize, name: &str) -> NitfResult<()> {
+    pub fn read<R: Read + Seek>(&mut self, reader: &mut R, n_bytes: usize, name: &str) -> NitfResult<()> {
         self.size = n_bytes;
         self.tre = vec![0; n_bytes];
         reader

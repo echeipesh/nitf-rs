@@ -2,7 +2,7 @@
 //!
 //! Need to implement data mask - which also means need to implement some kind of nicer parsing (enums, among other things)
 use std::fmt::Display;
-use std::fs::File;
+use std::io::{Seek, Read};
 use std::str::FromStr;
 
 use crate::headers::NitfSegmentHeader;
@@ -240,7 +240,7 @@ pub enum Mode {
 
 // FUNCTIONS
 /// Helper function for parsing bands
-fn read_bands(reader: &mut File, n_band: u32) -> NitfResult<Vec<Band>> {
+fn read_bands<R: Read + Seek>(reader: &mut R, n_band: u32) -> NitfResult<Vec<Band>> {
     let mut bands: Vec<Band> = vec![Band::default(); n_band as usize];
     for band in &mut bands {
         band.irepband.read(reader, 2u8, "IREPBAND")?;
@@ -262,7 +262,7 @@ fn read_bands(reader: &mut File, n_band: u32) -> NitfResult<Vec<Band>> {
 
 // TRAIT IMPLEMENTATIONS
 impl NitfSegmentHeader for ImageHeader {
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.im.read(reader, 2u8, "IM")?;
         self.iid1.read(reader, 10u8, "IID1")?;
         self.idatim.read(reader, 14u8, "IDATIM")?;

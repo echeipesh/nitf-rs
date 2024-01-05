@@ -1,7 +1,6 @@
 //! Text segment definition
 use std::fmt::Display;
-use std::fs::File;
-
+use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use crate::headers::NitfSegmentHeader;
@@ -49,7 +48,7 @@ pub enum TextFormat {
 }
 
 impl NitfSegmentHeader for TextHeader {
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.te.read(reader, 2u8, "TE")?;
         self.textid.read(reader, 7u8, "TEXTID")?;
         self.txtalvl.read(reader, 3u8, "TXTALVL")?;

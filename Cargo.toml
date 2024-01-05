@@ -9,5 +9,4 @@ readme = "README-crates.md"
 
 [dependencies]
 thiserror = "^1.0"
-memmap2 = "0.5.10"
 log = "0.4"

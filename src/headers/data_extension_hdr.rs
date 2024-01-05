@@ -1,6 +1,6 @@
 //! Data Extension segment subheader definition
 use std::fmt::Display;
-use std::fs::File;
+use std::io::{Read, Seek};
 use std::str::FromStr;
 
 use crate::headers::NitfSegmentHeader;
@@ -46,7 +46,7 @@ pub enum OverflowedHeaderType {
 }
 
 impl NitfSegmentHeader for DataExtensionHeader {
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.de.read(reader, 2u8, "DE")?;
         self.desid.read(reader, 25u8, "DESID")?;
         self.desver.read(reader, 2u8, "DESVER")?;

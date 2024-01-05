@@ -48,6 +48,8 @@
 use log::debug;
 use std::fmt::Display;
 use std::fs::File;
+use std::io::Read;
+use std::io::Seek;
 use std::path::Path;
 use thiserror::Error;
 
@@ -121,7 +123,7 @@ pub fn read_nitf(path: &Path) -> NitfResult<Nitf> {
 }
 
 impl Nitf {
-    pub fn from_file(file: &mut File) -> NitfResult<Self> {
+    pub fn from_file<R: Read + Seek>(file: &mut R) -> NitfResult<Self> {
         let mut nitf = Self::default();
         debug!("Reading NITF file header");
         nitf.nitf_header.read(file)?;

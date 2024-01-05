@@ -1,6 +1,6 @@
 //! File header definition
 use std::fmt::Display;
-use std::fs::File;
+use std::io::{Read, Seek};
 
 use crate::headers::NitfSegmentHeader;
 use crate::types::{ExtendedSubheader, NitfField, Security};
@@ -130,7 +130,7 @@ impl Display for NitfHeader {
 }
 
 impl NitfSegmentHeader for NitfHeader {
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         self.fhdr.read(reader, 4u8, "FHDR")?;
         // Crash if file header is not NITF
         if self.fhdr.string != "NITF" {
@@ -219,7 +219,7 @@ pub struct SubHeader {
     pub item_size: NitfField<u64>,
 }
 impl SubHeader {
-    pub fn read(&mut self, reader: &mut File, sh_size: u64, item_size: u64) -> NitfResult<()> {
+    pub fn read<R: Read + Seek>(&mut self, reader: &mut R, sh_size: u64, item_size: u64) -> NitfResult<()> {
         self.subheader_size
             .read(reader, sh_size, "SUBHEADER_SIZE")?;
         self.item_size.read(reader, item_size, "ITEM_SIZE")?;

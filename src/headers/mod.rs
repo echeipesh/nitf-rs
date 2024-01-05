@@ -1,6 +1,6 @@
 //! Header metadata definitions
 
-use std::fs::File;
+use std::io::{Read, Seek};
 
 pub mod data_extension_hdr;
 pub mod graphic_hdr;
@@ -31,11 +31,11 @@ where
     ///
     /// reader: Stream from which to read header information
     #[allow(unused)]
-    fn read(&mut self, reader: &mut File) -> NitfResult<()> {
+    fn read<R: Read + Seek>(&mut self, reader: &mut R) -> NitfResult<()> {
         panic!("Didn't implement read() method")
     }
 
-    fn from_reader(reader: &mut File) -> NitfResult<Self> {
+    fn from_reader<R: Read + Seek>(reader: &mut R) -> NitfResult<Self> {
         let mut hdr = Self::default();
         hdr.read(reader)?;
         Ok(hdr)
